@@ -94,6 +94,7 @@ function plugin = HearingLossSimulation_v2021()
             win =  hamming(WindowLength,'periodic');
             HopLength = 16;
             FFTLength =  WindowLength;
+            fs = getSampleRate(plugin);
             
 plugin.stfL  = dsp.STFT(win,WindowLength-HopLength,FFTLength);
 plugin.istfL = dsp.ISTFT(win,WindowLength-HopLength,1,0);
@@ -101,23 +102,23 @@ plugin.istfL = dsp.ISTFT(win,WindowLength-HopLength,1,0);
 plugin.stfR  = dsp.STFT(win,WindowLength-HopLength,FFTLength);
 plugin.istfR = dsp.ISTFT(win,WindowLength-HopLength,1,0);
 
-plugin.FiltBankL = gammatoneFilterBank([20 16000 ],32,getSampleRate(plugin));
-plugin.FiltBankR = gammatoneFilterBank([20 16000 ],32,getSampleRate(plugin));
+plugin.FiltBankL = gammatoneFilterBank([20 16000 ],32,fs);
+plugin.FiltBankR = gammatoneFilterBank([20 16000 ],32,fs);
 
 plugin.lpfilt   =  dsp.VariableBandwidthIIRFilter('FilterType','Lowpass','FilterOrder',10,...
     'PassbandFrequency',10);
 plugin.mildLossL = multibandParametricEQ('NumEQBands',7,'HasHighShelfFilter',true,'HighShelfCutoff',8000,'HasLowpassFilter',...
     true,'LowpassCutoff',8000,'LowpassSlope',48,'Frequencies',[250,500,...
-    1000,2000,4000,6000,8000],'QualityFactors',[2.3,2.3,2.3,2.3,2.3,2.3,2.3],'PeakGains',[0 0 -15 -15 -20 -20 -25]);
+    1000,2000,4000,6000,8000],'QualityFactors',[2.3,2.3,2.3,2.3,2.3,2.3,2.3],'PeakGains',[0 0 -15 -15 -20 -20 -25],'SampleRate',fs);
 plugin.moderLossL = multibandParametricEQ('NumEQBands',7,'HasHighShelfFilter',true,'HighShelfCutoff',8000,'HasLowpassFilter',...
     true,'LowpassCutoff',8000,'LowpassSlope',48,'Frequencies',[250,500,...
-    1000,2000,4000,6000,8000],'QualityFactors',[2.3,2.3,2.3,2.3,2.3,2.3,2.3],'PeakGains',[0 0 -20 -20 -30 -30 -45]);
+    1000,2000,4000,6000,8000],'QualityFactors',[2.3,2.3,2.3,2.3,2.3,2.3,2.3],'PeakGains',[0 0 -20 -20 -30 -30 -45],'SampleRate',fs);
 plugin.mildLossR = multibandParametricEQ('NumEQBands',7,'HasHighShelfFilter',true,'HighShelfCutoff',8000,'HasLowpassFilter',...
     true,'LowpassCutoff',8000,'LowpassSlope',48,'Frequencies',[250,500,...
-    1000,2000,4000,6000,8000],'QualityFactors',[2.3,2.3,2.3,2.3,2.3,2.3,2.3],'PeakGains',[0 0 -15 -15 -20 -20 -25]);
+    1000,2000,4000,6000,8000],'QualityFactors',[2.3,2.3,2.3,2.3,2.3,2.3,2.3],'PeakGains',[0 0 -15 -15 -20 -20 -25],'SampleRate',fs);
 plugin.moderLossR = multibandParametricEQ('NumEQBands',7,'HasHighShelfFilter',true,'HighShelfCutoff',8000,'HasLowpassFilter',...
     true,'LowpassCutoff',8000,'LowpassSlope',48,'Frequencies',[250,500,...
-    1000,2000,4000,6000,8000],'QualityFactors',[2.3,2.3,2.3,2.3,2.3,2.3,2.3],'PeakGains',[0 0 -20 -20 -30 -30 -45]);
+    1000,2000,4000,6000,8000],'QualityFactors',[2.3,2.3,2.3,2.3,2.3,2.3,2.3],'PeakGains',[0 0 -20 -20 -30 -30 -45],'SampleRate',fs);
 end
 
 %% setter & getter functions for tuneable properties
@@ -465,20 +466,27 @@ out=cat(2,sumL,sumR);
     end
 end
 function  reset(plugin)
-      
-            plugin.FiltBankL.SampleRate = getSampleRate(plugin); 
-            plugin.FiltBankR.SampleRate = getSampleRate(plugin);      
-            reset(plugin.lpfilt);
-            reset(plugin.FiltBankL);
-            reset(plugin.FiltBankR);
-            reset(plugin.mildLossL);
-            reset(plugin.moderLossL);
-            reset(plugin.mildLossR);
-            reset(plugin.moderLossR);
-            reset(plugin.stfL)
-            reset(plugin.istfL)
-            reset(plugin.stfR)
-            reset(plugin.istfR)
+    fs = getSampleRate(plugin);
+
+    % Update sample rate
+    plugin.FiltBankL.SampleRate = fs;
+    plugin.FiltBankR.SampleRate = fs;
+    plugin.mildLossL.SampleRate = fs;
+    plugin.moderLossL.SampleRate = fs;
+    plugin.mildLossR.SampleRate = fs;
+    plugin.moderLossR.SampleRate = fs;
+
+    reset(plugin.lpfilt);
+    reset(plugin.FiltBankL);
+    reset(plugin.FiltBankR);
+    reset(plugin.mildLossL);
+    reset(plugin.moderLossL);
+    reset(plugin.mildLossR);
+    reset(plugin.moderLossR);
+    reset(plugin.stfL);
+    reset(plugin.istfL);
+    reset(plugin.stfR);
+    reset(plugin.istfR);
 
 end
 end
